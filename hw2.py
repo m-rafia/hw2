@@ -373,11 +373,12 @@ goal is to find a room that is on fire.  Any room with a temperature over
 
 class RoomProblem(Problem):
     
-    def __init__(self, initial, goal=None):
+    def __init__(self, initial, goal=None, room_map=None):
         super().__init__(initial, goal)
+        self.room_map = room_map
 
     def actions(self, state):
-        return list(room_map.graph.get(state, {}).keys())
+        return list(self.room_map.get(state).keys())
     
     def result(self, state, action):
         return action
@@ -388,14 +389,14 @@ class RoomProblem(Problem):
         return temp(state) > 400 
     
     def path_cost(self, c, state1, action, state2):
-        return c + room_map.graph[state1][state2]
+        return c + self.room_map.get(state1, state2)
 
     def value(self, state):
         raise NotImplementedError
 
 
 def room_depth_first(initial, goal, debug=False):
-    problem = RoomProblem(initial, goal)
+    problem = RoomProblem(initial, goal, room_map)  # Pass room_map to the problem
 
     solution_node = depth_first_graph_search(problem)
 
@@ -416,7 +417,7 @@ def room_depth_first(initial, goal, debug=False):
 
 
 def room_breadth_first(initial, goal, debug=False):
-    problem = RoomProblem(initial, goal)
+    problem = RoomProblem(initial, goal, room_map)  # Pass room_map to the problem
 
     solution_node = breadth_first_graph_search(problem)
 
@@ -437,7 +438,7 @@ def room_breadth_first(initial, goal, debug=False):
 
 
 def room_best_first(initial, goal, debug=False):
-    problem = RoomProblem(initial, goal)
+    problem = RoomProblem(initial, goal, room_map)  # Pass room_map to the problem
 
     solution_node = best_first_graph_search(problem)
 
@@ -459,10 +460,10 @@ def room_best_first(initial, goal, debug=False):
 
 def f_worst(node):
     # Return the temperature of the node, which is a measure of cost
-    return room_map.temps.get(node.state, float('inf'))  # Use temperature as "cost"
+    return room_map.get(node.state, float('inf'))  # Use temperature as "cost"
     
 def room_worst_first(initial, goal, debug=False):
-    problem = RoomProblem(initial, goal)
+    problem = RoomProblem(initial, goal, room_map)  # Pass room_map to the problem
     
     solution_node = best_first_graph_search(problem, f_worst)
 
@@ -482,7 +483,6 @@ def room_worst_first(initial, goal, debug=False):
     return (path_nodes, path_cost, search_cost)
 
 
-
 def room_heuristic(state, goal=None):
     """A simple heuristic function that calculates the difference in temperature between the current room and a goal room."""
     # If we have an explicit goal, use the temperature difference between the two rooms
@@ -493,7 +493,7 @@ def room_heuristic(state, goal=None):
     return abs(temp(state) - 400)
 
 def room_astar(initial, goal, debug=False):
-    problem = RoomProblem(initial, goal)
+    problem = RoomProblem(initial, goal, room_map)  # Pass room_map to the problem
 
     # Perform A* search using the heuristic function
     solution_node = astar_search(problem, h=room_heuristic)
