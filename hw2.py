@@ -398,23 +398,29 @@ class RoomProblem(Problem):
 def room_depth_first(initial, goal, debug=False):
     problem = RoomProblem(initial, goal, room_map)  # Pass room_map to the problem
 
+    # List to store nodes we explore during the search
+    explored = set()
+
+    # Perform depth-first search
     solution_node = depth_first_graph_search(problem)
 
     if solution_node is None:
-        return None 
+        return None  # No solution found
 
     # Extract solution path
     path = solution_node.path()
-    path_nodes = [node.state for node in path] 
-    path_cost = solution_node.path_cost 
-    search_cost = len(solution_node.explored)  
+    path_nodes = [node.state for node in path]  # List of rooms in the solution path
+    path_cost = solution_node.path_cost  # Cost of the path
+
+    # Count the number of nodes explored during the search
+    search_cost = len(explored)  # Number of nodes explored
 
     if debug:
-        visited_nodes = list(problem.explored) 
+        # If debug is True, include the nodes visited in the search
+        visited_nodes = list(explored)  # List of visited nodes in order
         return (path_nodes, path_cost, search_cost, visited_nodes)
 
     return (path_nodes, path_cost, search_cost)
-
 
 def room_breadth_first(initial, goal, debug=False):
     problem = RoomProblem(initial, goal, room_map)  # Pass room_map to the problem
