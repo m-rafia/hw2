@@ -411,7 +411,7 @@ def room_depth_first(initial, goal, debug=False):
     path = solution_node.path()
     path_nodes = [node.state for node in path]  # List of rooms in the solution path
     path_cost = solution_node.path_cost  
-    search_cost = len(problem.explored)  # Number of nodes explored
+    search_cost = len(explored)  # Number of nodes explored
 
     if debug:
         # If debug is True, include the nodes visited in the search
