@@ -374,7 +374,7 @@ goal is to find a room that is on fire.  Any room with a temperature over
 class RoomProblem(Problem):
     
     def __init__(self, initial, goal=None, room_map=None):
-        super().__init__(initial, goal)
+        super().__init__(self, initial, goal)
         self.room_map = room_map
 
     def actions(self, state):
