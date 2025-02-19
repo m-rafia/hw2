@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 #from hw2.search import *
-from hw2.search import *
+from search import *
 
 # ********************************************************
 # CS 370 HW #2  DUE Thursday, 2/13/2025 at 11:59 pm
