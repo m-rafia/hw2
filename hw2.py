@@ -407,9 +407,9 @@ def room_depth_first(initial, goal, debug=False):
     if solution_node is None:
         return None  # No solution found
 
-    # Extract solution path
+    # Extract solution path (excluding initial state)
     path = solution_node.path()
-    path_nodes = [node.state for node in path]  # List of rooms in the solution path
+    path_nodes = [node.state for node in path][1:]  # Skip the first node (initial state)
     path_cost = solution_node.path_cost  
     search_cost = len(explored)  # Number of nodes explored
 
