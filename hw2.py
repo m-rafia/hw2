@@ -522,7 +522,25 @@ def room_worst_first(initial, goal=None, debug=False):
     return (path_nodes, path_cost, search_cost)
 
 def room_astar(initial, goal, debug=False):
-    pass
+    problem = RoomProblem(initial, goal, room_map)
+    
+    # Perform A* search using the existing h function in the RoomProblem class
+    solution_node = astar_search(problem, problem.h)
+
+    if solution_node is None:
+        return None  # No solution found
+    
+    # Extract the solution path
+    path_nodes = [node.state for node in solution_node.path()][1:]  # Remove initial state
+    path_cost = solution_node.path_cost
+    search_cost = problem.explored_count
+
+    if debug:
+        # Retrieve visited nodes if debug is True
+        visited_nodes = problem.visited_nodes
+        return (path_nodes, path_cost, search_cost, visited_nodes)
+    
+    return (path_nodes, path_cost, search_cost)
 
 '''
 You may write auxiliary procedures and classes in addition to the
