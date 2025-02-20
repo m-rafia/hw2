@@ -335,8 +335,7 @@ node in the graph.
 '''
 
 def temp(node):
-   # return room_map.temps.get(node, None)
-    return room_map.temps[node]
+   return room_map.temps.get(node, None)
 
 '''
 Define the following search routines that operate on the room_map
@@ -483,7 +482,7 @@ careerpath() below that returns a string, either "depthfirst",
 also be in the mix. Just don't tell your parents.
 '''
 def careerpath():
-    return "randomwalk"
+    return "astar"
 
 ### test function from google python course
 ### =======================================
