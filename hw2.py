@@ -396,8 +396,8 @@ class RoomProblem(Problem):
     
     def path_cost(self, c, state1, action, state2):
         #return c + self.room_map.graph[state1][state2] # return the cost of moving between two rooms
-        #return c + (self.room_map.get(state1, state2) or infinity)
-        return c + self.room_map.get(state1, {}).get(state2, float('inf'))
+        return c + (self.room_map.get(state1, state2) or infinity)
+        #return c + self.room_map.get(state1, {}).get(state2, float('inf'))
     
     # imported from line 1188. do i need?
     def find_min_edge(self):
