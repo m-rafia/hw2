@@ -466,13 +466,47 @@ def room_breadth_first(initial, goal=None, debug=False):
 
 def room_best_first(initial, goal=None, debug=False):
     if goal is None:
-        goal = lambda state: room_map.temps.get(state, 0) > 400 
-    pass
+        goal = lambda state: room_map.temps.get(state, 0) > 400
+
+    problem = RoomProblem(initial, goal, room_map)
+    solution_node = best_first_graph_search(problem)
+
+    if solution_node is None:
+        return None  # No solution found
+    
+    # Extract solution path
+    path_nodes = [node.state for node in solution_node.path()][1:]  # Remove initial state
+    path_cost = solution_node.path_cost
+    search_cost = problem.explored_count
+
+    if debug:
+        # Retrieve visited nodes if debug is True
+        visited_nodes = problem.visited_nodes
+        return (path_nodes, path_cost, search_cost, visited_nodes)
+    
+    return (path_nodes, path_cost, search_cost)
 
 def room_worst_first(initial, goal=None, debug=False):
     if goal is None:
         goal = lambda state: room_map.temps.get(state, 0) > 400 
-    pass
+    
+    problem = RoomProblem(initial, goal, room_map)
+    solution_node = best_first_graph_search(problem, heuristic=lambda node: -problem.h(node))
+    
+    if solution_node is None:
+        return None  # No solution found
+    
+    # Extract solution path
+    path_nodes = [node.state for node in solution_node.path()][1:]  # Remove initial state
+    path_cost = solution_node.path_cost
+    search_cost = problem.explored_count
+
+    if debug:
+        # Retrieve visited nodes if debug is True
+        visited_nodes = problem.visited_nodes
+        return (path_nodes, path_cost, search_cost, visited_nodes)
+    
+    return (path_nodes, path_cost, search_cost)
 
 def room_astar(initial, goal, debug=False):
     pass
