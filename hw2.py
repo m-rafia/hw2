@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-#from hw2.search import *
 from search import *
 
 # ********************************************************
@@ -22,7 +21,7 @@ from search import *
 # spent reading.
 
 def hours():
-    return 4
+    return 6
 
 # ********************************************************
 # here we create the burning building
@@ -336,7 +335,8 @@ node in the graph.
 '''
 
 def temp(node):
-   return room_map.temps.get(node, None)
+   # return room_map.temps.get(node, None)
+    return room_map.temps[node]
 
 '''
 Define the following search routines that operate on the room_map
@@ -371,151 +371,95 @@ goal is to find a room that is on fire.  Any room with a temperature over
 400 degrees is on fire.
 '''
 
+# create subclass of Problem
 class RoomProblem(Problem):
-    
     def __init__(self, initial, goal=None, room_map=None):
-        Problem.__init__(self, initial, goal) #??
-        self.room_map = room_map
+       super().__init__(initial, goal)
+       self.room_map = room_map # the graph structure representing room connections
+       self.explored_count = 0 # track the number of nodes explored
+       self.visited_nodes = [] # track visited nodes in order
 
     def actions(self, state):
+        #return self.room_map.graph[state].keys() # return neighboring rooms
         return list(self.room_map.get(state).keys())
     
     def result(self, state, action):
-        return action
+        return action # moving to a neigboring room simply means changing state
     
     def goal_test(self, state):
-        if self.goal:
-            return state == self.goal
-        return temp(state) > 400 
+        if state not in self.visited_nodes:
+            self.visited_nodes.append(state)  # Track visited nodes
+        self.explored_count += 1  # Increment explored node count
+
+        if callable(self.goal): # if goal is a function, evaluate it
+            return self.goal(state)
+        return state == self.goal # otherwise, compare with goal state
     
     def path_cost(self, c, state1, action, state2):
-        return c + self.room_map.get(state1, state2)
-
-    def value(self, state):
-        raise NotImplementedError
-
-
-def room_depth_first(initial, goal, debug=False):
-    problem = RoomProblem(initial, goal, room_map)  # Define problem
+        #return c + self.room_map.graph[state1][state2] # return the cost of moving between two rooms
+        #return c + (self.room_map.get(state1, state2) or infinity)
+        return c + self.room_map.get(state1, {}).get(state2, float('inf'))
     
-    # Perform depth-first search
-    solution_node, explored = depth_first_graph_search(problem)  # Get solution and explored set
+    # imported from line 1188. do i need?
+    def find_min_edge(self):
+        """Find minimum value of edges."""
+        m = float('inf')
+        for d in self.room_map.graph_dict.values():
+            local_min = min(d.values())
+            m = min(m, local_min)
+        return m
+
+    def h(self, node):
+        """h function is straight-line distance from a node's state to goal."""
+        locs = getattr(self.room_map, 'locations', None)
+        if locs and isinstance(self.goal, str) and self.goal in locs:
+            if isinstance(node, str):
+                return int(distance(locs[node], locs[self.goal]))
+            return int(distance(locs[node.state], locs[self.goal]))
+        else:
+            return float('inf')
+
+
+
+def room_depth_first(initial, goal=None, debug=False):
+    if goal is None:
+        goal = lambda state: room_map.temps.get(state, 0) > 400 
+    
+    problem = RoomProblem(initial, goal, room_map) # create the problem instance
+    solution_node = depth_first_graph_search(problem) # perform DFS
 
     if solution_node is None:
         return None  # No solution found
-
-    # Extract solution path **without the initial state**
-    path = solution_node.path()
-    path_nodes = [node.state for node in path][1:]  # Exclude the initial state
-    path_cost = solution_node.path_cost  
-    search_cost = len(explored)  # Correctly count explored nodes
-
-    if debug:
-        # Include the nodes visited in the search if debug is True
-        visited_nodes = list(explored)  # Convert set to list
-        return (path_nodes, path_cost, search_cost, visited_nodes)
-
-    return (path_nodes, path_cost, search_cost)
-
-def room_breadth_first(initial, goal, debug=False):
-    problem = RoomProblem(initial, goal, room_map)  # Pass room_map to the problem
-
-    explored = set()
     
-    solution_node = breadth_first_graph_search(problem)
-
-    if solution_node is None:
-        return None 
-
-    # Extract solution path
-    path = solution_node.path()
-    path_nodes = [node.state for node in path] 
-    path_cost = solution_node.path_cost 
-    search_cost = len(explored) 
+    # extract solution path
+    path_nodes = [node.state for node in solution_node.path()][1:]  # Remove initial state
+    path_cost = solution_node.path_cost
+    search_cost = problem.explored_count
 
     if debug:
-        visited_nodes = list(explored)  
+        visited_nodes = problem.visited_nodes  # Retrieve visited nodes from problem
         return (path_nodes, path_cost, search_cost, visited_nodes)
-
+    
     return (path_nodes, path_cost, search_cost)
 
 
-def room_best_first(initial, goal, debug=False):
-    problem = RoomProblem(initial, goal, room_map)  # Pass room_map to the problem
+def room_breadth_first(initial, goal=None, debug=False):
+    if goal is None:
+        goal = lambda state: room_map.temps.get(state, 0) > 400 
+    pass
 
-    solution_node = best_first_graph_search(problem)
+def room_best_first(initial, goal=None, debug=False):
+    if goal is None:
+        goal = lambda state: room_map.temps.get(state, 0) > 400 
+    pass
 
-    if solution_node is None:
-        return None 
-
-    # Extract solution path
-    path = solution_node.path()
-    path_nodes = [node.state for node in path]
-    path_cost = solution_node.path_cost 
-    search_cost = len(problem.explored) 
-
-    if debug:
-        visited_nodes = list(problem.explored) 
-        return (path_nodes, path_cost, search_cost, visited_nodes)
-
-    return (path_nodes, path_cost, search_cost)
-
-
-def f_worst(node):
-    # Return the temperature of the node, which is a measure of cost
-    return room_map.get(node.state, float('inf'))  # Use temperature as "cost"
-    
-def room_worst_first(initial, goal, debug=False):
-    problem = RoomProblem(initial, goal, room_map)  # Pass room_map to the problem
-    
-    solution_node = best_first_graph_search(problem, f_worst)
-
-    if solution_node is None:
-        return None 
-
-    # Extract the solution path
-    path = solution_node.path()
-    path_nodes = [node.state for node in path] 
-    path_cost = solution_node.path_cost 
-    search_cost = len(problem.explored) 
-
-    if debug:
-        visited_nodes = list(problem.explored) 
-        return (path_nodes, path_cost, search_cost, visited_nodes)
-
-    return (path_nodes, path_cost, search_cost)
-
-
-def room_heuristic(state, goal=None):
-    """A simple heuristic function that calculates the difference in temperature between the current room and a goal room."""
-    # If we have an explicit goal, use the temperature difference between the two rooms
-    if goal:
-        return abs(temp(state) - temp(goal))
-    
-    # If no goal, heuristic is the difference from 400 degrees (fire threshold)
-    return abs(temp(state) - 400)
+def room_worst_first(initial, goal=None, debug=False):
+    if goal is None:
+        goal = lambda state: room_map.temps.get(state, 0) > 400 
+    pass
 
 def room_astar(initial, goal, debug=False):
-    problem = RoomProblem(initial, goal, room_map)  # Pass room_map to the problem
-
-    # Perform A* search using the heuristic function
-    solution_node = astar_search(problem, h=room_heuristic)
-
-    if solution_node is None:
-        return None 
-
-    # Extract solution path
-    path = solution_node.path()
-    path_nodes = [node.state for node in path]
-    path_cost = solution_node.path_cost 
-    search_cost = len(problem.explored)
-
-    if debug:
-        visited_nodes = list(problem.explored) 
-        return (path_nodes, path_cost, search_cost, visited_nodes)
-
-    return (path_nodes, path_cost, search_cost)
-
+    pass
 
 '''
 You may write auxiliary procedures and classes in addition to the
@@ -539,7 +483,7 @@ careerpath() below that returns a string, either "depthfirst",
 also be in the mix. Just don't tell your parents.
 '''
 def careerpath():
-    return "astar"
+    return "randomwalk"
 
 ### test function from google python course
 ### =======================================
