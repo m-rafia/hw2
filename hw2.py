@@ -496,13 +496,20 @@ def room_worst_first(initial, goal=None, debug=False):
     if goal is None:
         goal = lambda state: room_map.temps.get(state, 0) > 400 
     
+    # Create the problem instance
     problem = RoomProblem(initial, goal, room_map)
-    solution_node = best_first_graph_search(problem, heuristic=lambda node: -problem.h(node))
-    
+
+    # Define the heuristic function for worst-first search.
+    def h(node):
+        # The heuristic is the temperature of the current room; rooms with higher temperatures are worse.
+        return -room_map.temps.get(node.state, 0) 
+
+    solution_node = best_first_graph_search(problem, h)
+
     if solution_node is None:
         return None  # No solution found
     
-    # Extract solution path
+    # Extract the solution path
     path_nodes = [node.state for node in solution_node.path()][1:]  # Remove initial state
     path_cost = solution_node.path_cost
     search_cost = problem.explored_count
